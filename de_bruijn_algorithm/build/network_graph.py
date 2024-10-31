@@ -84,9 +84,11 @@ class NetworkxGraph:
                 self.path_conditions = "El grafo tiene un camino euleriano."
                 return True
             else:
-                self.path_conditions += f"  El grafo tiene {len(nodes_equal_degrees)} nodos con igual grado de entrada y salida pero difiere en {len(self.graph.nodes())-2} nodos"
+                self.path_conditions += f"  El grafo tiene {len(nodes_equal_degrees)} nodos con igual grado de entrada y salida pero difiere en {len(self.graph.nodes())-2} nodos."
         else:
+            # TODO: todos los poishbles
             self.path_conditions += f"  El grafo tiene {len(start_nodes)} posible(s) nodo(s) de inicio y {len(end_nodes)} posible(s) nodo(s) de fin"
+
         return False
 
     def _find_eulerian_path(self):
