@@ -4,11 +4,12 @@ import matplotlib.pyplot as plt
 class NetworkxGraph:
 
     def __init__(self):
-        self.graph = nx.DiGraph()
+        self.graph = None
         self.eulerian_path = None
         self.dna_sequence = None
 
     def build_graph(self, dictionary):
+        self.graph = nx.DiGraph()
 
         for prefix, sufix in dictionary.items():
             if len(sufix) > 1:
