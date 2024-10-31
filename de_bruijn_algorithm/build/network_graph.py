@@ -7,6 +7,8 @@ class NetworkxGraph:
         self.graph = None
         self.eulerian_path = None
         self.dna_sequence = None
+        self.cycle_conditions = None
+        self.path_conditions = None
 
     def build_graph(self, dictionary):
         self.graph = nx.DiGraph()
@@ -53,14 +55,17 @@ class NetworkxGraph:
     def _is_eulerian_cycle(self):
         in_degrees = dict(self.graph.in_degree())
         out_degrees = dict(self.graph.out_degree())
+        self.cycle_conditions = "No es un ciclo euleriano porque: \n"
         
         for node in in_degrees:
             if in_degrees[node] != out_degrees[node]:
-                return False
+                self.cycle_conditions += f" El nodo {node} tiene {in_degrees[node]} aristas de entrada y {out_degrees[node]} aristas de salida. \n"
             
         if nx.is_strongly_connected(self.graph):
+            self.cycle_conditions = "El grafo tiene un ciclo euleriano."
             return True
         else:
+            self.cycle_conditions += f" El grafo no es fuertemente conexo."
             return False
     
     def _is_eulerian_path(self):
@@ -72,9 +77,16 @@ class NetworkxGraph:
         start_nodes =  [node for node in in_degrees if out_degrees[node] - in_degrees[node] == 1]
         end_nodes = [node for node in out_degrees if in_degrees[node] - out_degrees[node] == 1]
 
+        self.path_conditions = "No tiene un camino euleriano porque: \n"
+
         if len(start_nodes) == 1 and len(end_nodes) == 1:
             if len(nodes_equal_degrees) == len(self.graph.nodes()) - 2:
+                self.path_conditions = "El grafo tiene un camino euleriano."
                 return True
+            else:
+                self.path_conditions += f"  El grafo tiene {len(nodes_equal_degrees)} nodos con igual grado de entrada y salida pero difiere en {len(self.graph.nodes())-2} nodos"
+        else:
+            self.path_conditions += f"  El grafo tiene {len(start_nodes)} posible(s) nodo(s) de inicio y {len(end_nodes)} posible(s) nodo(s) de fin"
         return False
 
     def _find_eulerian_path(self):
@@ -109,4 +121,7 @@ class NetworkxGraph:
             self.dna_sequence += destination[-1]
 
         return self.dna_sequence
+    
+    def get_conditions(self):
+        return self.cycle_conditions, self.path_conditions
     
