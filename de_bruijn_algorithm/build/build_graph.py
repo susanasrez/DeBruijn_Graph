@@ -1,9 +1,11 @@
-from .network_graph import NetworkxGraph
+from .networkx.networkx_graph import NetworkxGraph
+from .igraph.igraph_graph import IGraphGraph
 
 class BuildGraph:
 
     __builders = {
-        'NetworkxGraph': NetworkxGraph()
+        'NetworkxGraph': NetworkxGraph(),
+        'IGraph': IGraphGraph()
     }
 
     @staticmethod

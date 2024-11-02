@@ -1,17 +1,17 @@
 
 class SequenceAssembler:
-    def __init__(self, eulerian_path):
-        self.eulerian_path = eulerian_path
-        self.dna_sequence = None
+    def __init__(self, eulerian_paths):
+        self.eulerian_paths = eulerian_paths
+        self.dna_sequences = []
 
     def assemble_sequence(self):
-        if self.eulerian_path is None:
+        if not self.eulerian_paths:
             return None
 
-        dna_sequence = self.eulerian_path[0][0]
+        for path in self.eulerian_paths:
+            dna_sequence = path[0][0]
+            for _, destination in path:
+                dna_sequence += destination[-1]
+            self.dna_sequences.append(dna_sequence)
 
-        for _, destination in self.eulerian_path:
-            dna_sequence += destination[-1]
-
-        self.dna_sequence = dna_sequence
-        return self.dna_sequence
+        return self.dna_sequences[0] if len(self.dna_sequences) == 1 else "\n".join(self.dna_sequences)
