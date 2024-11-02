@@ -1,129 +1,53 @@
 import networkx as nx
 import matplotlib.pyplot as plt
+from .eulerian_path import EulerianPathFinder
+from .sequence_assembler import SequenceAssembler
+from .graph_drawer import GraphDrawer
 
 class NetworkxGraph:
 
     def __init__(self):
         self.graph = None
+        self.graph_drawer = None
+        self.eulerian_path_finder = EulerianPathFinder(self.graph)
         self.eulerian_path = None
-        self.dna_sequence = None
-        self.cycle_conditions = None
-        self.path_conditions = None
+        self.sequence_assembler = None
 
     def build_graph(self, dictionary):
         self.graph = nx.DiGraph()
-
-        for prefix, sufix in dictionary.items():
-            if len(sufix) > 1:
-                for s in sufix:
+        for prefix, suffix in dictionary.items():
+            if len(suffix) > 1:
+                for s in suffix:
                     self.graph.add_edge(prefix, s, label=f"{prefix}{s[-1]}")
             else:
-                self.graph.add_edge(prefix, sufix[0], label=f"{prefix}{sufix[0][-1]}")
+                self.graph.add_edge(prefix, suffix[0], label=f"{prefix}{suffix[0][-1]}")
+        self.graph_drawer = GraphDrawer(self.graph)
     
-    def draw_graph(self, draw_eulerian=False ):
-        authomatic_pos = nx.circular_layout(self.graph)
-        plt.figure(figsize=(10, 6))
-        nx.draw(self.graph, authomatic_pos, with_labels=True, node_size=2000, node_color="blue", font_size=10, font_weight="bold", edge_color="black", font_color="white")
-
-        if draw_eulerian and self.eulerian_path:
-            nx.draw_networkx_nodes(self.graph, authomatic_pos, nodelist=[self.eulerian_path[0][0], self.eulerian_path[-1][1]], node_color="red", node_size=2000)
-            edge_order_labels = {}
-            original_edge_labels = nx.get_edge_attributes(self.graph, 'label')
+    def draw_graph(self, draw_eulerian=False):
+        if self.graph_drawer is None:
+            raise ValueError("El grafo no ha sido construido.")
         
-            for i, (src, dst) in enumerate(self.eulerian_path):
-                nx.draw_networkx_edges(self.graph, authomatic_pos, edgelist=[(src, dst)], 
-                                    edge_color="red", width=2)
-                
-                original_label = original_edge_labels.get((src, dst), "")
-                new_order = f"({i + 1})"
-                if (src, dst) in edge_order_labels:
-                    edge_order_labels[(src, dst)] += new_order
+        self.graph_drawer.eulerian_path = self.eulerian_path
+        self.graph_drawer.draw_graph(draw_eulerian=draw_eulerian)
 
-                elif (dst, src) in edge_order_labels:
-                    edge_order_labels[(dst, src)] += new_order
-                else:
-                    edge_order_labels[(src, dst)] = f"{original_label} {new_order}"
-
-            nx.draw_networkx_edge_labels(self.graph, authomatic_pos, edge_labels=edge_order_labels, font_color="red")
-
-        if not draw_eulerian or self.eulerian_path is None:
-            edge_labels = nx.get_edge_attributes(self.graph, 'label')
-            nx.draw_networkx_edge_labels(self.graph, authomatic_pos, edge_labels=edge_labels, font_color="black")
-        plt.title("Grafo de De Bruijn")
-        plt.show()
-    
-    def _is_eulerian_cycle(self):
-        in_degrees = dict(self.graph.in_degree())
-        out_degrees = dict(self.graph.out_degree())
-        self.cycle_conditions = "No es un ciclo euleriano porque: \n"
-        
-        for node in in_degrees:
-            if in_degrees[node] != out_degrees[node]:
-                self.cycle_conditions += f" El nodo {node} tiene {in_degrees[node]} aristas de entrada y {out_degrees[node]} aristas de salida. \n"
-            
-        if nx.is_strongly_connected(self.graph):
-            self.cycle_conditions = "El grafo tiene un ciclo euleriano."
-            return True
-        else:
-            self.cycle_conditions += f" El grafo no es fuertemente conexo."
-            return False
-    
-    def _is_eulerian_path(self):
-
-        in_degrees = dict(self.graph.in_degree())
-        out_degrees = dict(self.graph.out_degree())
-        nodes_equal_degrees = [node for node in in_degrees if in_degrees[node] == out_degrees[node]]
-
-        start_nodes =  [node for node in in_degrees if out_degrees[node] - in_degrees[node] == 1]
-        end_nodes = [node for node in out_degrees if in_degrees[node] - out_degrees[node] == 1]
-
-        self.path_conditions = "No tiene un camino euleriano porque: \n"
-
-        if len(start_nodes) == 1 and len(end_nodes) == 1:
-            if len(nodes_equal_degrees) == len(self.graph.nodes()) - 2:
-                self.path_conditions = "El grafo tiene un camino euleriano."
-                return True
-            else:
-                self.path_conditions += f"  El grafo tiene {len(nodes_equal_degrees)} nodos con igual grado de entrada y salida pero difiere en {len(self.graph.nodes())-2} nodos."
-        else:
-            # TODO: todos los poishbles
-            self.path_conditions += f"  El grafo tiene {len(start_nodes)} posible(s) nodo(s) de inicio y {len(end_nodes)} posible(s) nodo(s) de fin"
-
-        return False
-
-    def _find_eulerian_path(self):
-        if self._is_eulerian_cycle():
-            self.eulerian_path = list(nx.eulerian_circuit(self.graph))
-        elif self._is_eulerian_path():
-            self.eulerian_path = list(nx.eulerian_path(self.graph))
-        else:
-            self.eulerian_path = None
-        
-        return self.eulerian_path
-    
+  
     def get_eulerian_path(self):
-        caclculate_path = self._find_eulerian_path()
-        if caclculate_path is None:
+        self.eulerian_path = self.eulerian_path_finder.find_eulerian_path(self.graph)
+        if not self.eulerian_path:
             return "No existe camino euleriano"
         
         path = f'{self.eulerian_path[0][0]} -> {self.eulerian_path[0][1]}'
-
         for i in range(1, len(self.eulerian_path)):
             path += f" -> {self.eulerian_path[i][1]}"
-
         return path
+    
+    def get_conditions(self):
+        return self.eulerian_path_finder.get_conditions()
     
     def assemble_sequence(self):
         if self.eulerian_path is None:
-            return None
+            return "Primero debe encontrar el camino euleriano"
         
-        self.dna_sequence = self.eulerian_path[0][0]
-
-        for _, destination in self.eulerian_path:
-            self.dna_sequence += destination[-1]
-
-        return self.dna_sequence
-    
-    def get_conditions(self):
-        return self.cycle_conditions, self.path_conditions
+        self.sequence_assembler = SequenceAssembler(self.eulerian_path)
+        return self.sequence_assembler.assemble_sequence()
     
