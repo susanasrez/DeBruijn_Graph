@@ -14,22 +14,38 @@ class GraphDrawer:
             "vertex_color": "blue",
             "edge_color": "black",
             "edge_label": self.graph.es["label"],
-            "vertex_size": 50,
-            "vertex_label_size": 20,
-            "edge_label_size": 10,
-            "bbox": (800, 800),
+            "vertex_size": 80,
+            "vertex_label_size": 30,
+            "edge_label_size": 20,
+            "bbox": (1000, 1000),
             "margin": 80
         }
-        print(self.eulerian_paths)
+
         if draw_eulerian and self.eulerian_paths:
-            
             if len(self.eulerian_paths) == 1:
                 chosen_path = self.eulerian_paths[0]
             else:
                 chosen_path = random.choice(self.eulerian_paths)
 
-            path_edges = [(edge[0], edge[1]) for edge in chosen_path]
-            self.graph.es["color"] = ["red" if (e.source, e.target) in path_edges else "black" for e in self.graph.es]
+            start_node, end_node = chosen_path[0][0], chosen_path[-1][1]
+            visual_style["vertex_color"] = [
+                "red" if v["name"] in {start_node, end_node} else "blue" for v in self.graph.vs
+            ]
+
+            edge_colors = ["black"] * len(self.graph.es)
+            edge_labels = self.graph.es["label"][:] 
+
+            for i, (src_name, dst_name) in enumerate(chosen_path):
+                src_idx = self.graph.vs.find(name=src_name).index
+                dst_idx = self.graph.vs.find(name=dst_name).index
+                edge_idx = self.graph.get_eid(src_idx, dst_idx)
+
+                edge_colors[edge_idx] = "red"
+                original_label = self.graph.es[edge_idx]["label"]
+                edge_labels[edge_idx] = f"{original_label} ({i + 1})"
+
+            visual_style["edge_color"] = edge_colors
+            visual_style["edge_label"] = edge_labels
 
         plot_path = "graph.png"
         plot(self.graph, plot_path, layout=layout, **visual_style)

@@ -48,10 +48,10 @@ class NetworkxGraph:
     def get_conditions(self):
         return self.eulerian_path_finder.get_conditions()
     
-    def assemble_sequence(self):
+    def assemble_sequence(self, kmers):
         if self.eulerian_path is None:
             return "Primero debe encontrar el camino euleriano"
         
-        self.sequence_assembler = SequenceAssembler(self.eulerian_path)
+        self.sequence_assembler = SequenceAssembler(self.eulerian_path, kmers)
         return self.sequence_assembler.assemble_sequence()
     
