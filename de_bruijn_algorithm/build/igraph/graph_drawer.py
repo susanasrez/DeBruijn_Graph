@@ -12,12 +12,12 @@ class GraphDrawer:
         visual_style = {
             "vertex_label": self.graph.vs["name"],
             "vertex_color": "blue",
-            "edge_color": "black",
+            "vertex_label_color": "white",
             "edge_label": self.graph.es["label"],
             "vertex_size": 80,
-            "vertex_label_size": 30,
-            "edge_label_size": 20,
-            "bbox": (1000, 1000),
+            "vertex_label_size": 25,
+            "edge_label_size": 15,
+            "bbox": (900, 900),
             "margin": 80
         }
 
@@ -34,6 +34,7 @@ class GraphDrawer:
 
             edge_colors = ["black"] * len(self.graph.es)
             edge_labels = self.graph.es["label"][:] 
+            edge_label_colors = ["black"] * len(self.graph.es)
 
             for i, (src_name, dst_name) in enumerate(chosen_path):
                 src_idx = self.graph.vs.find(name=src_name).index
@@ -41,11 +42,13 @@ class GraphDrawer:
                 edge_idx = self.graph.get_eid(src_idx, dst_idx)
 
                 edge_colors[edge_idx] = "red"
+                edge_label_colors[edge_idx] = "red" 
                 original_label = self.graph.es[edge_idx]["label"]
                 edge_labels[edge_idx] = f"{original_label} ({i + 1})"
 
             visual_style["edge_color"] = edge_colors
             visual_style["edge_label"] = edge_labels
+            visual_style["edge_label_color"] = edge_label_colors
 
         plot_path = "graph.png"
         plot(self.graph, plot_path, layout=layout, **visual_style)

@@ -34,16 +34,17 @@ class NetworkxGraph:
     def get_eulerian_paths(self):
         self.eulerian_path = self.eulerian_path_finder.find_eulerian_path(self.graph)
         if not self.eulerian_path:
-            return "No existe camino euleriano"
+            return "No existe camino euleriano."
         
         paths_output = []
         for path_index, path in enumerate(self.eulerian_path, start=1):
-            path_str = f'Camino Euleriano {path_index}: {path[0][0]} -> {path[0][1]}'
+            path_str = f'<li>Camino Euleriano {path_index}: {path[0][0]} -> {path[0][1]}'
             for i in range(1, len(path)):
                 path_str += f" -> {path[i][1]}"
+            path_str += "</li>"
             paths_output.append(path_str)
         
-        return "\n".join(paths_output)
+        return ''.join(paths_output)
     
     def get_conditions(self):
         return self.eulerian_path_finder.get_conditions()

@@ -8,7 +8,27 @@ class EulerianPathFinder:
         self.path_conditions = None
 
     def _is_eulerian_cycle(self):
-        return self.graph.is_connected() and all(deg % 2 == 0 for deg in self.graph.degree())
+        in_degrees = {v.index: v.indegree() for v in self.graph.vs}
+        out_degrees = {v.index: v.outdegree() for v in self.graph.vs}
+        self.cycle_conditions = "<h3> No tiene un ciclo euleriano porque: </h3>"
+        
+        is_eulerian = True
+        for node in in_degrees:
+            if in_degrees[node] != out_degrees[node]:
+                node_name = self.graph.vs[node]["name"]
+                self.cycle_conditions += f" <li> El nodo {node_name} tiene {in_degrees[node]} aristas de entrada y {out_degrees[node]} aristas de salida.</li>"
+                is_eulerian = False
+        
+        if not self.graph.is_connected(mode="strong"):
+            self.cycle_conditions += " <li> El grafo no es fuertemente conexo.</li>"
+            is_eulerian = False
+        
+        if is_eulerian:
+            self.cycle_conditions = "<h3> El grafo tiene un ciclo euleriano. </h3>"
+            self.path_conditions = "<h3> No tiene un camino euleriano porque ya tiene un ciclo euleriano. </h3>"
+            return True
+        else:
+            return False
     
     def _find_eulerian_cycle(self):
         g_copy = self.graph.copy()
@@ -37,13 +57,13 @@ class EulerianPathFinder:
         start_nodes = [i for i in range(len(in_degrees)) if out_degrees[i] - in_degrees[i] == 1]
         end_nodes = [i for i in range(len(out_degrees)) if in_degrees[i] - out_degrees[i] == 1]
 
-        self.path_conditions = "No tiene un camino euleriano porque: \n"
+        self.path_conditions = "<h3> No tiene un camino euleriano porque: </h3>"
 
         if len(start_nodes) == 1 and len(end_nodes) == 1:
-            self.path_conditions = "El grafo tiene un camino euleriano."
+            self.path_conditions = "<h3> El grafo tiene un camino euleriano. </h3>"
             return True
         else:
-            self.path_conditions += " No tiene nodos de inicio y fin válidos para un camino euleriano."
+            self.path_conditions += " <li> No tiene nodos de inicio y fin válidos para un camino euleriano. </li>"
 
         return False
 
@@ -60,7 +80,8 @@ class EulerianPathFinder:
     def _deep_search(self, temp_graph, v, path, used_edges, end_idx):
         if len(used_edges) == temp_graph.ecount() and v == end_idx:
             eulerian_path = [(self.graph.vs[src]["name"], self.graph.vs[dst]["name"]) for src, dst in path]
-            self.eulerian_paths.append(eulerian_path)
+            if eulerian_path not in self.eulerian_paths:
+                self.eulerian_paths.append(eulerian_path)
             return
                 
         for e in temp_graph.incident(v, mode="OUT"):
@@ -85,7 +106,7 @@ class EulerianPathFinder:
             end_idx = node_indices[end_nodes[0]]
             temp_graph = self.graph.copy()
             self._deep_search(temp_graph, start_idx, [], set(), end_idx)
-            self.path_conditions = "El grafo tiene un único camino euleriano."
+            self.path_conditions = "<h3> El grafo tiene un camino euleriano. </h3>"
             return self.eulerian_paths
 
         for start, end in product(start_nodes, end_nodes):
@@ -97,9 +118,9 @@ class EulerianPathFinder:
                 self.eulerian_paths.append(max_path)
 
         if len(self.eulerian_paths) > 1:
-            self.path_conditions += "El grafo tiene múltiples caminos."
+            self.path_conditions += "<h3> El grafo tiene múltiples caminos entre los nodos. </h3>"
         else:
-            self.path_conditions = "No existen caminos eulerianos en el grafo dado."
+            self.path_conditions = "<h3> No existen caminos eulerianos en el grafo dado. </h3>"
 
         return self.eulerian_paths
 

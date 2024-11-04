@@ -1,6 +1,3 @@
-from Bio import pairwise2
-from Bio.pairwise2 import format_alignment
-
 class SequenceAssembler:
     def __init__(self, eulerian_paths, kmers):
         self.eulerian_paths = eulerian_paths
