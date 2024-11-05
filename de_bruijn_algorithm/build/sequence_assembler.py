@@ -20,7 +20,7 @@ class SequenceAssembler:
         else:
             longest_sequence = max(self.dna_sequences, key=len)
             possible_sequences = self.align_kmers_with_gaps(longest_sequence)
-            return "Possible sequence: " + possible_sequences
+            return "Secuencia posible: " + possible_sequences
 
 
     def align_kmers_with_gaps(self, sequence):
