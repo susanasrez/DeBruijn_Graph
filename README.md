@@ -4,7 +4,7 @@
   
   ## 1. Creación de la definición del grafo
   
-  Para dfinir el grafo de Bruijn, se utiliza el módulo `create`, que contiene la clase necesaria para este proceso. Esta clase, a partir de una lista de $k$-mers, genera un diccionario en el que las claves representan los prefijos de los $k-mers$ y los valores corresponden a los sufijos asociados. 
+  Para dfinir el grafo de Bruijn, se utiliza el módulo `create`, que contiene la clase necesaria para este proceso. Esta clase, a partir de una lista de $k-mers$, genera un diccionario en el que las claves representan los prefijos de los $k-mers$ y los valores corresponden a los sufijos asociados. 
   
   ## 2. Implementación del algoritmo
   
@@ -52,20 +52,65 @@
 
   ## 4. Reconstrucción de la Secuencia Original: Clase `SequenceAssembler`
   
-  Esta clase es la responsable de ensamblar la secuencia original de ADN con la particularidad de que, a pesar de no haber encontrado un camino euleriano o ciclo exacto, intenat aproximar la secuencia añadiendo huecos de los $kmers$ faltantes. En el notebook se porprociona un ejemplo claro que permite visualizar la aporximación. Para ello, implementa los siguientes métodos:
+  Esta clase es la responsable de ensamblar la secuencia original de ADN con la particularidad de que, a pesar de no haber encontrado un camino euleriano o ciclo exacto, intenta aproximar la secuencia añadiendo huecos de los $kmers$ faltantes. En el notebook se porprociona un ejemplo claro que permite visualizar la aporximación. Para ello, implementa los siguientes métodos:
   - `assemble_sequence`: Este método realiza el ensamblaje de las secuencias de ADN a partir de los caminos eulerianos.
     1. Verifica si hay caminos eulerianos (`self.eulerian_paths`). Si no hay, devuelve `None`.
     2. Para cada camino en `self.eulerian_paths`, construye una secuencia de ADN agregando las últimas letras de cada nodo en el camino. Cada secuencia ensamblada se agrega a `self.dna_sequences`.
     3. Si solo hay una secuencia en `self.dna_sequences`, la devuelve directamente.
-    4. Si hay varias secuencias, toma la más larga y la alinea con los kmers restantes para asegurar la continuidad, llamando al método `align_kmers_with_gaps`.
-  - `align_kmers_with_gaps(sequence)`: Este método alinea los kmers faltantes con la secuencia dada para completar la secuencia ensamblada.
-    1. Encuentra los kmers que ya están en la secuencia y los que no, con el método `all_kmers_sequence`.
-    2. Los kmers faltantes se superponen para formar secuencias continuas usando `superpose_kmers`.
-    3. Utiliza un bucle para verificar si el sufijo de la secuencia actual coincide con el prefijo de algún kmer en los kmers superpuestos. Si encuentra coincidencias, se agrega el kmer a la secuencia ensamblada. Si no encuentra coincidencias, agrega un guion (`-`) seguido del primer kmer faltante.
-    4. Devuelve la secuencia resultante con los kmers alineados.
-  - `check_prefix(suffix, kmer, k)`: Este método verifica si el `suffix` (sufijo) coincide con el `prefix` (prefijo) de un kmer dado.
-  - `all_kmers_sequence(sequence)`: Este método verifica cuáles de los kmers están presentes en la secuencia dada.
-  - `superpose_kmers(kmers_not_in_sequence)`: Este método toma los kmers que no están en la secuencia y trata de superponerlos para formar secuencias continuas.
-  - `find_overlap(self, kmer1, kmer2)`: Este método encuentra el mayor solapamiento entre dos kmers.
-</div>
+    4. Si hay varias secuencias, toma la más larga y la alinea con los $kmers$ restantes para asegurar la continuidad, llamando al método `align_kmers_with_gaps`.
+  - `align_kmers_with_gaps(sequence)`: Este método alinea los $kmers$ faltantes con la secuencia dada para completar la secuencia ensamblada.
+    1. Encuentra los $kmers$ que ya están en la secuencia y los que no, con el método `all_kmers_sequence`.
+    2. Los $kmers$ faltantes se superponen para formar secuencias continuas usando `superpose_kmers`.
+    3. Utiliza un bucle para verificar si el sufijo de la secuencia actual coincide con el prefijo de algún $kmer$ en los $kmers$ superpuestos. Si encuentra coincidencias, se agrega el $kmer$ a la secuencia ensamblada. Si no encuentra coincidencias, agrega un guion (`-`) seguido del primer $kmer$ faltante.
+    4. Devuelve la secuencia resultante con los $kmers$ alineados.
+  - `check_prefix(suffix, kmer, k)`: Este método verifica si el `suffix` (sufijo) coincide con el `prefix` (prefijo) de un $kmer$ dado.
+  - `all_kmers_sequence(sequence)`: Este método verifica cuáles de los $kmers$ están presentes en la secuencia dada.
+  - `superpose_kmers(kmers_not_in_sequence)`: Este método toma los $kmers$ que no están en la secuencia y trata de superponerlos para formar secuencias continuas.
+  - `find_overlap(self, kmer1, kmer2)`: Este método encuentra el mayor solapamiento entre dos $kmers$.
 
+## 4. Manejo de casos erróneos
+
+### 4.1. Construcción de un Grafo con Múltiples Caminos de Salida desde un Nodo
+
+Inicialmente, se propuso definir la estructura del grafo utilizando un diccionario en Python. Sin embargo, dado que en un diccionario las claves son únicas, solo se permite asignar un único valor a cada clave. Para solucionar este inconveniente, en lugar de asociar un único nodo como valor, se definirá el valor como una lista de nodos, permitiendo así especificar todas las aristas salientes de cada nodo.
+
+### 4.2. Manejo y explicación de las condiciones de conectividad o grado de los nodos
+Para ello, se han definido dos variables de clase que permiten identificar, en caso de ausencia de alguno de los tipos de caminos, las condiciones que no se cumplen.
+
+En primer lugar, para los ciclos eulerianos, estas variables especifican qué nodos no cumplen con la condición de tener igual número de aristas de entrada y de salida. También indican si el grafo no es fuertemente conexo, es decir, que para cualquier par de nodos $u$ y $v$ en el grafo, existe un camino dirigido de  $u$ a $v$ y otro de $v$ a  $u$. Un ejemplo de grafo que no cumple las condiciones para un ciclo euleriano, pero sí para un camino euleriano, es el de la Figura 2. Las condiciones específicas que no se cumplen en este grafo son las siguientes:
+
+<div align="center">
+    <img src="images/grafo_camino.png" alt="Grafo camino" width = 700 />
+      <p><strong>Figura 2.</strong> Grafo que no contiene un ciclo euleriano.</p> 
+  </div>
+
+<h4> No tiene un ciclo euleriano porque: </h4> <li> El nodo AGT tiene 0 aristas de entrada y 1 aristas de salida. </li> <li> El nodo ACG tiene 2 aristas de entrada y 1 aristas de salida. </li> <li> El grafo no es fuertemente conexo. </li>
+
+En segundo lugar, para los caminos eulerianos, se deben cumplir las siguientes condiciones:
+- Existe un nodo cuyo grado de salida excede en una unidad al grado de entrada, siendo este nodo el punto de inicio del camino euleriano.
+- Existe un nodo cuyo grado de entrada es una unidad mayor que su grado de salida, y este nodo representa el final del camino euleriano.
+- Todos los demás nodos deben tener grados de entrada y salida iguales.
+
+Un caso atípico es la Figura 3, que muestra un grafo con múltiples nodos de inicio y fin, lo que implica caminos entre combinaciones de estos nodos. Las condiciones específicas que no se cumplen en este caso son las siguientes:
+
+<div align="center">
+    <img src="images/grafo_no_camino.png" alt="Grafo camino" width = 700 />
+      <p><strong>Figura 3.</strong> Grafo que no contiene un camino euleriano.</p> 
+  </div>
+
+
+<h4> El grafo tiene múltiples caminos entre los nodos. </h4>
+<li>Camino Euleriano 1: GA -> AC -> CT -> TT -> TA -> AT -> TG -> GT</li>
+<li>Camino Euleriano 2: GA -> AC -> CT -> TT -> TA -> AT -> TG</li>
+<li>Camino Euleriano 3: CT -> TT -> TA -> AC -> CG -> GT</li>
+<li>Camino Euleriano 4: CT -> TT -> TA -> AC -> CG -> GT -> TG</li>
+
+
+### 4.3. Posibilidad de Ensamblar la Secuencia Original y Método de Corrección o Compleción de la Secuencia
+
+Como se ha presentado previamente, el caso atípico corresponde al ejemplo 3 del notebook. En consecuencia, dado que no es posible ensamblar la secuencia original mediante un camino euleriano, se propone emplear el algoritmo descrito en el apartado cuatro para intentar completar la secuencia. De este modo, la secuencia final ensamblada, aunque incompleta y con huecos, sería la siguiente:
+
+<h4>Secuencia original:</h4>Secuencia posible: GACTTATGT-TACGT-ACGTG-CTA
+
+ 
+</div>
